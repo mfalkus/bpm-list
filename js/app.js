@@ -7,6 +7,11 @@ import {
   createBreak,
   isSong,
   normalizeBpm,
+  loadGigName,
+  saveGigName,
+  DEFAULT_GIG_NAME,
+  loadGigDescription,
+  saveGigDescription,
 } from "./storage.js";
 
 const songList = document.getElementById("song-list");
@@ -18,6 +23,12 @@ const newBpmInput = document.getElementById("new-bpm");
 const rowTemplate = document.getElementById("song-row-template");
 const breakRowTemplate = document.getElementById("break-row-template");
 const themeToggle = document.getElementById("theme-toggle");
+const gigNameDisplay = document.getElementById("gig-name-display");
+const gigNameInput = document.getElementById("gig-name-input");
+const editGigNameBtn = document.getElementById("edit-gig-name");
+const gigDescDisplay = document.getElementById("gig-desc-display");
+const gigDescInput = document.getElementById("gig-desc-input");
+const editGigDescBtn = document.getElementById("edit-gig-desc");
 
 /** @type {import('./storage.js').ListItem[]} */
 let songs = loadSongs();
@@ -34,6 +45,69 @@ const tapTempos = new Map();
 const metronome = new Metronome((playing) => {
   updatePlayButtons(playing ? activePlayId : null);
 });
+
+function updateDocumentTitle(name) {
+  document.title = name === DEFAULT_GIG_NAME ? "BPM List" : `${name} · BPM List`;
+}
+
+function renderGigName(name) {
+  gigNameDisplay.textContent = name;
+  updateDocumentTitle(name);
+}
+
+function initInlineEdit({ display, input, editBtn, onSave }) {
+  const start = () => {
+    input.value = display.textContent;
+    display.hidden = true;
+    input.hidden = false;
+    input.focus();
+    input.select();
+  };
+
+  const finish = (save) => {
+    if (save) onSave(input.value);
+    input.hidden = true;
+    display.hidden = false;
+  };
+
+  editBtn.addEventListener("click", start);
+  display.addEventListener("click", start);
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      finish(true);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      finish(false);
+    }
+  });
+
+  input.addEventListener("blur", () => finish(true));
+}
+
+function initGigName() {
+  renderGigName(loadGigName());
+  renderGigDescription(loadGigDescription());
+
+  initInlineEdit({
+    display: gigNameDisplay,
+    input: gigNameInput,
+    editBtn: editGigNameBtn,
+    onSave: (value) => renderGigName(saveGigName(value)),
+  });
+
+  initInlineEdit({
+    display: gigDescDisplay,
+    input: gigDescInput,
+    editBtn: editGigDescBtn,
+    onSave: (value) => renderGigDescription(saveGigDescription(value)),
+  });
+}
+
+function renderGigDescription(description) {
+  gigDescDisplay.textContent = description;
+}
 
 function initTheme() {
   const stored = localStorage.getItem("bpmlist-theme");
@@ -405,4 +479,5 @@ document.addEventListener("keydown", (e) => {
 themeToggle.addEventListener("click", toggleTheme);
 
 initTheme();
+initGigName();
 render();

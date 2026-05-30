@@ -64,6 +64,42 @@ function isValidItem(item) {
   );
 }
 
+const GIG_NAME_KEY = "bpmlist-gig-name";
+const DEFAULT_GIG_NAME = "Your Gig";
+
+/** @returns {string} */
+export function loadGigName() {
+  const name = localStorage.getItem(GIG_NAME_KEY);
+  return name?.trim() || DEFAULT_GIG_NAME;
+}
+
+/** @param {string} name @returns {string} */
+export function saveGigName(name) {
+  const trimmed = name.trim() || DEFAULT_GIG_NAME;
+  localStorage.setItem(GIG_NAME_KEY, trimmed);
+  return trimmed;
+}
+
+export { DEFAULT_GIG_NAME };
+
+const GIG_DESC_KEY = "bpmlist-gig-description";
+const DEFAULT_GIG_DESCRIPTION = "Your gig setlist with tempo reference.";
+
+/** @returns {string} */
+export function loadGigDescription() {
+  const desc = localStorage.getItem(GIG_DESC_KEY);
+  return desc?.trim() || DEFAULT_GIG_DESCRIPTION;
+}
+
+/** @param {string} description @returns {string} */
+export function saveGigDescription(description) {
+  const trimmed = description.trim() || DEFAULT_GIG_DESCRIPTION;
+  localStorage.setItem(GIG_DESC_KEY, trimmed);
+  return trimmed;
+}
+
+export { DEFAULT_GIG_DESCRIPTION };
+
 /** @param {unknown} value */
 export function normalizeBpm(value) {
   if (value === "" || value === null || value === undefined) return null;

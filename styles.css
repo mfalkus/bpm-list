@@ -93,17 +93,117 @@ body {
   margin-bottom: 2rem;
 }
 
-.header h1 {
+.header h1,
+.header__gig-name {
   margin: 0;
   font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  cursor: pointer;
+}
+
+.header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.edit-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity var(--transition);
+}
+
+.edit-btn:hover {
+  opacity: 0.75;
+}
+
+.edit-btn--desc {
+  width: 1rem;
+  height: 1rem;
+}
+
+.pencil-icon {
+  display: block;
+  width: 0.8125rem;
+  height: 0.8125rem;
+  background-color: var(--text-muted);
+  mask-image: url("icons/pencil.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("icons/pencil.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.edit-btn--desc .pencil-icon {
+  width: 0.6875rem;
+  height: 0.6875rem;
+}
+
+.header__gig-name-input {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.header__gig-name-input:focus {
+  outline: none;
+}
+
+.header__tagline-row {
+  display: flex;
+  align-items: center;
+  gap: 0.1875rem;
+  margin-top: 0.25rem;
 }
 
 .header__tagline {
-  margin: 0.25rem 0 0;
+  margin: 0;
   color: var(--text-muted);
   font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.header__tagline-input {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.header__tagline-input:focus {
+  outline: none;
 }
 
 .icon-btn {

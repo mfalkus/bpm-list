@@ -11,8 +11,48 @@
     <div class="app">
       <header class="header">
         <div class="header__brand">
-          <h1>BPM List</h1>
-          <p class="header__tagline">Your gig set list with tempo reference.</p>
+          <div class="header__title-row">
+            <h1 id="gig-name-display" class="header__gig-name">Your Gig</h1>
+            <input
+              type="text"
+              id="gig-name-input"
+              class="header__gig-name-input"
+              maxlength="80"
+              aria-label="Gig name"
+              hidden
+            />
+            <button
+              type="button"
+              id="edit-gig-name"
+              class="edit-btn"
+              aria-label="Rename gig"
+              title="Rename gig"
+            >
+              <span class="pencil-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="header__tagline-row">
+            <p id="gig-desc-display" class="header__tagline">
+              Your gig setlist with tempo reference.
+            </p>
+            <input
+              type="text"
+              id="gig-desc-input"
+              class="header__tagline-input"
+              maxlength="120"
+              aria-label="Gig description"
+              hidden
+            />
+            <button
+              type="button"
+              id="edit-gig-desc"
+              class="edit-btn edit-btn--desc"
+              aria-label="Edit description"
+              title="Edit description"
+            >
+              <span class="pencil-icon" aria-hidden="true"></span>
+            </button>
+          </div>
         </div>
         <button
           type="button"
