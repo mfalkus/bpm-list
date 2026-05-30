@@ -162,7 +162,12 @@ function persist() {
 }
 
 function getSongNumber(index) {
-  return songs.slice(0, index + 1).filter(isSong).length;
+  let n = 0;
+  for (let i = index; i >= 0; i--) {
+    if (!isSong(songs[i])) break;
+    n++;
+  }
+  return n;
 }
 
 function getTapTempo(songId) {
