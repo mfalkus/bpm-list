@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>BPM List</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="header__brand">
+          <h1>BPM List</h1>
+          <p class="header__tagline">Your gig set list with tempo reference.</p>
+        </div>
+        <button
+          type="button"
+          id="theme-toggle"
+          class="icon-btn"
+          aria-label="Toggle light/dark mode"
+          title="Toggle theme"
+        >
+          <span class="theme-icon theme-icon--light" aria-hidden="true">☀</span>
+          <span class="theme-icon theme-icon--dark" aria-hidden="true">☾</span>
+        </button>
+      </header>
+
+      <main>
+        <form id="add-form" class="add-form" autocomplete="off">
+          <input
+            type="text"
+            id="new-title"
+            class="input"
+            placeholder="Song title"
+            required
+            maxlength="120"
+          />
+          <input
+            type="number"
+            id="new-bpm"
+            class="input input--bpm"
+            placeholder="BPM"
+            min="20"
+            max="400"
+            step="1"
+          />
+          <button type="submit" class="btn btn--primary">Add song</button>
+        </form>
+
+        <div id="empty-state" class="empty-state" hidden>
+          <p>No songs yet. Add your first tune above.</p>
+        </div>
+
+        <ul id="song-list" class="song-list" aria-label="Song list"></ul>
+      </main>
+    </div>
+
+    <template id="song-row-template">
+      <li class="song-row" data-id="">
+        <input
+          type="text"
+          class="input song-row__title"
+          placeholder="Song title"
+          maxlength="120"
+          aria-label="Song title"
+        />
+        <div class="song-row__bpm-group">
+          <input
+            type="number"
+            class="input input--bpm song-row__bpm"
+            placeholder="BPM"
+            min="20"
+            max="400"
+            step="1"
+            aria-label="Beats per minute"
+          />
+          <button
+            type="button"
+            class="btn btn--ghost song-row__tap"
+            title="Tap along to the song to detect tempo"
+          >
+            Tap
+          </button>
+        </div>
+        <div class="song-row__actions">
+          <button
+            type="button"
+            class="btn btn--play song-row__play"
+            aria-label="Play metronome"
+            title="Play metronome"
+          >
+            <span class="play-icon" aria-hidden="true">▶</span>
+            <span class="stop-icon" aria-hidden="true">■</span>
+          </button>
+          <button
+            type="button"
+            class="btn btn--ghost btn--danger song-row__delete"
+            aria-label="Remove song"
+            title="Remove song"
+          >
+            ✕
+          </button>
+        </div>
+      </li>
+    </template>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
