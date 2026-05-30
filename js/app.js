@@ -25,6 +25,8 @@ const rowTemplate = document.getElementById("song-row-template");
 const breakRowTemplate = document.getElementById("break-row-template");
 const themeToggle = document.getElementById("theme-toggle");
 const volumeSlider = document.getElementById("volume-slider");
+const gigTimeBtn = document.getElementById("gig-time-btn");
+const appEl = document.getElementById("app");
 const gigNameDisplay = document.getElementById("gig-name-display");
 const gigNameInput = document.getElementById("gig-name-input");
 const editGigNameBtn = document.getElementById("edit-gig-name");
@@ -53,6 +55,11 @@ const tapTempos = new Map();
 /** @type {ReturnType<typeof setTimeout> | null} */
 let urlSyncTimer = null;
 
+let isGigTime = false;
+
+/** @type {Set<string>} */
+const completedIds = new Set();
+
 const metronome = new Metronome(
   (playing) => {
     updatePlayButtons(playing ? activePlayId : null);
@@ -77,6 +84,118 @@ function clearBeatFlash() {
   for (const row of songList.querySelectorAll(".song-row.is-beating")) {
     row.classList.remove("is-beating", "is-beating--accent");
   }
+}
+
+function setGigTime(active) {
+  isGigTime = active;
+  appEl.classList.toggle("is-gig-time", active);
+  gigTimeBtn.classList.toggle("is-active", active);
+  gigTimeBtn.setAttribute("aria-pressed", String(active));
+  gigTimeBtn.textContent = active ? "Edit set list" : "Gig Time";
+  gigTimeBtn.title = active
+    ? "Unlock setlist for editing"
+    : "Lock setlist for live performance";
+
+  if (!gigNameInput.hidden) {
+    gigNameInput.hidden = true;
+    gigNameDisplay.hidden = false;
+  }
+  if (!gigDescInput.hidden) {
+    gigDescInput.hidden = true;
+    gigDescDisplay.hidden = false;
+  }
+
+  if (!active) {
+    completedIds.clear();
+  }
+
+  syncGigTimeUI();
+
+  if (active && activeSongId === null && songs.length > 0) {
+    const firstVisible = findNextVisibleIndex(-1, 1);
+    if (firstVisible >= 0) setActiveSong(songs[firstVisible].id);
+  }
+}
+
+function isRowVisible(itemId) {
+  return !isGigTime || !completedIds.has(itemId);
+}
+
+function findNextVisibleIndex(fromIndex, direction) {
+  if (direction === 0) return -1;
+
+  let index = fromIndex + direction;
+  while (index >= 0 && index < songs.length) {
+    if (isRowVisible(songs[index].id)) return index;
+    index += direction;
+  }
+
+  return -1;
+}
+
+function syncRowDisplay(row, item) {
+  const titleText = row.querySelector(".song-row__title-text");
+  const bpmText = row.querySelector(".song-row__bpm-text");
+
+  if (titleText) {
+    titleText.textContent = item.title;
+  }
+
+  if (bpmText && isSong(item)) {
+    if (item.bpm != null) {
+      bpmText.textContent = String(item.bpm);
+      bpmText.classList.remove("is-empty");
+    } else {
+      bpmText.textContent = "—";
+      bpmText.classList.add("is-empty");
+    }
+  }
+
+  row.classList.toggle("is-done", isGigTime && completedIds.has(item.id));
+}
+
+function syncGigTimeUI() {
+  for (const row of songList.querySelectorAll(".song-row")) {
+    const item = songs.find((s) => s.id === row.dataset.id);
+    if (item) syncRowDisplay(row, item);
+  }
+}
+
+function markItemDone(itemId) {
+  if (!isGigTime || completedIds.has(itemId)) return;
+
+  completedIds.add(itemId);
+
+  const row = songList.querySelector(`.song-row[data-id="${itemId}"]`);
+  row?.classList.add("is-done");
+
+  if (activePlayId === itemId) {
+    metronome.stop();
+    activePlayId = null;
+    updatePlayButtons(null);
+  }
+
+  const index = songs.findIndex((s) => s.id === itemId);
+  const nextIndex = findNextVisibleIndex(index, 1);
+  if (nextIndex >= 0) {
+    setActiveSong(songs[nextIndex].id);
+    scrollActiveRowIntoView();
+    return;
+  }
+
+  const prevIndex = findNextVisibleIndex(index, -1);
+  if (prevIndex >= 0) {
+    setActiveSong(songs[prevIndex].id);
+    scrollActiveRowIntoView();
+    return;
+  }
+
+  activeSongId = null;
+  updateActiveRows();
+}
+
+function initGigTime() {
+  gigTimeBtn.addEventListener("click", () => setGigTime(!isGigTime));
 }
 
 function getAppState() {
@@ -223,6 +342,7 @@ function setActiveSong(songId) {
 }
 
 function setActiveAddForm() {
+  if (isGigTime) return;
   activeSongId = null;
   updateActiveRows();
   newTitleInput.focus();
@@ -244,6 +364,18 @@ function selectAdjacentSong(delta) {
       ? songs.findIndex((s) => s.id === activeSongId)
       : -1;
 
+    if (isGigTime) {
+      const prevIndex =
+        currentIndex < 0
+          ? findNextVisibleIndex(songs.length, -1)
+          : findNextVisibleIndex(currentIndex, -1);
+      if (prevIndex >= 0) {
+        setActiveSong(songs[prevIndex].id);
+        scrollActiveRowIntoView();
+      }
+      return;
+    }
+
     if (currentIndex <= 0) {
       setActiveAddForm();
       return;
@@ -257,13 +389,27 @@ function selectAdjacentSong(delta) {
   if (songs.length === 0) return;
 
   if (!activeSongId) {
-    setActiveSong(songs[0].id);
-    scrollActiveRowIntoView();
+    const firstIndex = isGigTime ? findNextVisibleIndex(-1, 1) : 0;
+    if (firstIndex >= 0) {
+      setActiveSong(songs[firstIndex].id);
+      scrollActiveRowIntoView();
+    }
     return;
   }
 
   const currentIndex = songs.findIndex((s) => s.id === activeSongId);
-  if (currentIndex < 0 || currentIndex >= songs.length - 1) return;
+  if (currentIndex < 0) return;
+
+  if (isGigTime) {
+    const nextIndex = findNextVisibleIndex(currentIndex, 1);
+    if (nextIndex >= 0) {
+      setActiveSong(songs[nextIndex].id);
+      scrollActiveRowIntoView();
+    }
+    return;
+  }
+
+  if (currentIndex >= songs.length - 1) return;
 
   setActiveSong(songs[currentIndex + 1].id);
   scrollActiveRowIntoView();
@@ -318,6 +464,11 @@ async function handleTap(song, bpmInput, tapBtn = null) {
   if (bpm != null) {
     song.bpm = bpm;
     bpmInput.value = String(bpm);
+    const bpmText = bpmInput.closest(".song-row")?.querySelector(".song-row__bpm-text");
+    if (bpmText) {
+      bpmText.textContent = String(bpm);
+      bpmText.classList.remove("is-empty");
+    }
     persist();
 
     if (wasPlayingThis) {
@@ -329,9 +480,9 @@ async function handleTap(song, bpmInput, tapBtn = null) {
 async function togglePlay(song, bpmInput) {
   setActiveSong(song.id);
 
-  const bpm = normalizeBpm(bpmInput.value);
+  const bpm = song.bpm ?? normalizeBpm(bpmInput?.value);
   if (!bpm) {
-    bpmInput.focus();
+    if (!isGigTime) bpmInput?.focus();
     return;
   }
 
@@ -358,6 +509,7 @@ function render() {
 
   updateActiveRows();
   updatePlayButtons(activePlayId);
+  syncGigTimeUI();
 }
 
 function moveItem(index, delta) {
@@ -414,20 +566,34 @@ function createSongRow(song, index) {
   const row = fragment.querySelector(".song-row");
   const numEl = fragment.querySelector(".song-row__num");
   const titleInput = fragment.querySelector(".song-row__title");
+  const titleText = fragment.querySelector(".song-row__title-text");
   const bpmInput = fragment.querySelector(".song-row__bpm");
+  const bpmText = fragment.querySelector(".song-row__bpm-text");
   const tapBtn = fragment.querySelector(".song-row__tap");
   const playBtn = fragment.querySelector(".song-row__play");
+  const doneBtn = fragment.querySelector(".song-row__done");
 
   row.dataset.id = song.id;
   numEl.textContent = String(getSongNumber(index));
   titleInput.value = song.title;
-  if (song.bpm != null) bpmInput.value = String(song.bpm);
+  titleText.textContent = song.title;
+  if (song.bpm != null) {
+    bpmInput.value = String(song.bpm);
+    bpmText.textContent = String(song.bpm);
+    bpmText.classList.remove("is-empty");
+  } else {
+    bpmText.textContent = "—";
+    bpmText.classList.add("is-empty");
+  }
+
+  row.classList.toggle("is-done", isGigTime && completedIds.has(song.id));
 
   row.addEventListener("click", () => setActiveSong(song.id));
 
   titleInput.addEventListener("focus", () => setActiveSong(song.id));
   titleInput.addEventListener("input", () => {
     song.title = titleInput.value;
+    titleText.textContent = titleInput.value;
     persist();
   });
 
@@ -435,8 +601,15 @@ function createSongRow(song, index) {
   bpmInput.addEventListener("change", () => {
     setActiveSong(song.id);
     song.bpm = normalizeBpm(bpmInput.value);
-    if (song.bpm != null) bpmInput.value = String(song.bpm);
-    else bpmInput.value = "";
+    if (song.bpm != null) {
+      bpmInput.value = String(song.bpm);
+      bpmText.textContent = String(song.bpm);
+      bpmText.classList.remove("is-empty");
+    } else {
+      bpmInput.value = "";
+      bpmText.textContent = "—";
+      bpmText.classList.add("is-empty");
+    }
     persist();
 
     if (activePlayId === song.id && metronome.isPlaying) {
@@ -446,6 +619,10 @@ function createSongRow(song, index) {
 
   tapBtn.addEventListener("click", () => handleTap(song, bpmInput, tapBtn));
   playBtn.addEventListener("click", () => togglePlay(song, bpmInput));
+  doneBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    markItemDone(song.id);
+  });
   attachManageButtons(fragment, song, index);
 
   return fragment;
@@ -455,18 +632,27 @@ function createBreakRow(breakItem, index) {
   const fragment = breakRowTemplate.content.cloneNode(true);
   const row = fragment.querySelector(".song-row");
   const titleInput = fragment.querySelector(".song-row__title");
+  const titleText = fragment.querySelector(".song-row__title-text");
+  const doneBtn = fragment.querySelector(".song-row__done");
 
   row.dataset.id = breakItem.id;
   titleInput.value = breakItem.title;
+  titleText.textContent = breakItem.title;
+  row.classList.toggle("is-done", isGigTime && completedIds.has(breakItem.id));
 
   row.addEventListener("click", () => setActiveSong(breakItem.id));
 
   titleInput.addEventListener("focus", () => setActiveSong(breakItem.id));
   titleInput.addEventListener("input", () => {
     breakItem.title = titleInput.value;
+    titleText.textContent = titleInput.value;
     persist();
   });
 
+  doneBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    markItemDone(breakItem.id);
+  });
   attachManageButtons(fragment, breakItem, index);
 
   return fragment;
@@ -546,6 +732,7 @@ document.addEventListener("keydown", (e) => {
   }
 
   if (e.key === "t" || e.key === "T") {
+    if (isGigTime) return;
     e.preventDefault();
     const active = getActiveRowElements();
     if (active) handleTap(active.song, active.bpmInput, active.tapBtn);
@@ -574,6 +761,7 @@ copyLinkBtn.addEventListener("click", async () => {
 
 initTheme();
 initVolume();
+initGigTime();
 initGigName();
 syncToStorage();
 render();

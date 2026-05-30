@@ -1,6 +1,7 @@
 {
   "name": "bpmlist",
   "private": true,
+
   "scripts": {
     "start": "npx serve ."
   }

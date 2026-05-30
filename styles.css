@@ -220,6 +220,22 @@ body {
   gap: 0.625rem;
 }
 
+.gig-time-btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.gig-time-btn.is-active {
+  background: var(--play-active);
+  border-color: var(--play-active);
+  color: #fff;
+}
+
+.gig-time-btn.is-active:hover {
+  background: var(--play-active-hover);
+  border-color: var(--play-active-hover);
+}
+
 .volume-control {
   display: flex;
   align-items: center;
@@ -612,6 +628,105 @@ body {
 
 .song-row__title {
   width: 100%;
+}
+
+.song-row__title-text,
+.song-row__bpm-text {
+  display: none;
+}
+
+.song-row__title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.song-row__title-text--center {
+  text-align: center;
+  font-weight: 500;
+}
+
+.song-row__title-text--center:empty::before {
+  content: "Break";
+  font-style: italic;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.song-row__bpm-text {
+  flex: 0 0 5.5rem;
+  width: 5.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.song-row__bpm-text:empty::before {
+  content: "—";
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.song-row__bpm-text.is-empty {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.song-row__done {
+  display: none;
+}
+
+.app.is-gig-time #add-bar {
+  display: none;
+}
+
+.app.is-gig-time .edit-btn,
+.app.is-gig-time .song-row__tap,
+.app.is-gig-time .song-row__manage {
+  display: none;
+}
+
+.app.is-gig-time .song-row__title,
+.app.is-gig-time .song-row__bpm {
+  display: none;
+}
+
+.app.is-gig-time .song-row__title-text,
+.app.is-gig-time .song-row__bpm-text {
+  display: block;
+}
+
+.app.is-gig-time .song-row__bpm-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app.is-gig-time .header__gig-name,
+.app.is-gig-time .header__tagline {
+  cursor: default;
+}
+
+.app.is-gig-time .song-row__actions {
+  gap: 0.375rem;
+}
+
+.app.is-gig-time .song-row__done {
+  display: inline-flex;
+  color: var(--text-muted);
+}
+
+.app.is-gig-time .song-row__done:hover {
+  color: var(--success, #16a34a);
+  border-color: color-mix(in srgb, #16a34a 40%, var(--border));
+  background: color-mix(in srgb, #16a34a 12%, var(--surface));
+}
+
+.app.is-gig-time .song-row.is-done {
+  display: none;
 }
 
 .footer {

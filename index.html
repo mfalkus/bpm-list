@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app">
+    <div class="app" id="app">
       <header class="header">
         <div class="header__brand">
           <div class="header__title-row">
@@ -81,6 +81,15 @@
           </label>
           <button
             type="button"
+            id="gig-time-btn"
+            class="btn btn--ghost gig-time-btn"
+            aria-pressed="false"
+            title="Lock setlist for live performance"
+          >
+            Gig Time
+          </button>
+          <button
+            type="button"
             id="theme-toggle"
             class="icon-btn"
             aria-label="Toggle light/dark mode"
@@ -148,6 +157,7 @@
           maxlength="120"
           aria-label="Song title"
         />
+        <span class="song-row__title-text"></span>
         <div class="song-row__bpm-group">
           <input
             type="number"
@@ -158,6 +168,7 @@
             step="1"
             aria-label="Beats per minute"
           />
+          <span class="song-row__bpm-text" aria-hidden="true"></span>
           <button
             type="button"
             class="btn btn--ghost song-row__tap"
@@ -202,6 +213,14 @@
               ✕
             </button>
           </div>
+          <button
+            type="button"
+            class="btn btn--ghost btn--icon song-row__done"
+            aria-label="Mark song done"
+            title="Mark done"
+          >
+            ✓
+          </button>
         </div>
       </li>
     </template>
@@ -216,7 +235,16 @@
           maxlength="120"
           aria-label="Break label"
         />
+        <span class="song-row__title-text song-row__title-text--center"></span>
         <div class="song-row__actions song-row__actions--break">
+          <button
+            type="button"
+            class="btn btn--ghost btn--icon song-row__done"
+            aria-label="Mark break done"
+            title="Mark done"
+          >
+            ✓
+          </button>
           <div class="song-row__manage">
             <button
               type="button"
