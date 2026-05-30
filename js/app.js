@@ -98,16 +98,24 @@ function createRow(song, index) {
     }
   });
 
-  const tapTempo = new TapTempo((bpm) => {
-    song.bpm = bpm;
-    bpmInput.value = String(bpm);
-    persist();
-  });
+  const tapTempo = new TapTempo();
 
-  tapBtn.addEventListener("click", () => {
+  tapBtn.addEventListener("click", async () => {
     tapBtn.classList.add("is-tapping");
-    tapTempo.tap();
     window.setTimeout(() => tapBtn.classList.remove("is-tapping"), 120);
+
+    activePlayId = song.id;
+    const bpm = tapTempo.tap();
+
+    if (bpm != null) {
+      song.bpm = bpm;
+      bpmInput.value = String(bpm);
+      persist();
+      await metronome.start(bpm);
+    } else {
+      metronome.stop();
+      updatePlayButtons(null);
+    }
   });
 
   playBtn.addEventListener("click", async () => {
