@@ -93,14 +93,32 @@
             <span class="play-icon" aria-hidden="true">▶</span>
             <span class="stop-icon" aria-hidden="true">■</span>
           </button>
-          <button
-            type="button"
-            class="btn btn--ghost btn--danger song-row__delete"
-            aria-label="Remove song"
-            title="Remove song"
-          >
-            ✕
-          </button>
+          <div class="song-row__manage">
+            <button
+              type="button"
+              class="btn btn--ghost btn--icon song-row__up"
+              aria-label="Move song up"
+              title="Move up"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              class="btn btn--ghost btn--icon song-row__down"
+              aria-label="Move song down"
+              title="Move down"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              class="btn btn--ghost btn--icon btn--danger song-row__delete"
+              aria-label="Remove song"
+              title="Remove song"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       </li>
     </template>

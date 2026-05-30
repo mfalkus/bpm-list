@@ -50,20 +50,32 @@ function render() {
   songList.replaceChildren();
   emptyState.hidden = songs.length > 0;
 
-  for (const song of songs) {
-    songList.appendChild(createRow(song));
-  }
+  songs.forEach((song, index) => {
+    songList.appendChild(createRow(song, index));
+  });
 
   updatePlayButtons(activePlayId);
 }
 
-function createRow(song) {
+function moveSong(index, delta) {
+  const target = index + delta;
+  if (target < 0 || target >= songs.length) return;
+
+  const [item] = songs.splice(index, 1);
+  songs.splice(target, 0, item);
+  persist();
+  render();
+}
+
+function createRow(song, index) {
   const fragment = rowTemplate.content.cloneNode(true);
   const row = fragment.querySelector(".song-row");
   const titleInput = fragment.querySelector(".song-row__title");
   const bpmInput = fragment.querySelector(".song-row__bpm");
   const tapBtn = fragment.querySelector(".song-row__tap");
   const playBtn = fragment.querySelector(".song-row__play");
+  const upBtn = fragment.querySelector(".song-row__up");
+  const downBtn = fragment.querySelector(".song-row__down");
   const deleteBtn = fragment.querySelector(".song-row__delete");
 
   row.dataset.id = song.id;
@@ -116,6 +128,12 @@ function createRow(song) {
     const started = await metronome.start(bpm);
     if (!started) activePlayId = null;
   });
+
+  upBtn.disabled = index === 0;
+  downBtn.disabled = index === songs.length - 1;
+
+  upBtn.addEventListener("click", () => moveSong(index, -1));
+  downBtn.addEventListener("click", () => moveSong(index, 1));
 
   deleteBtn.addEventListener("click", () => {
     if (activePlayId === song.id) {
