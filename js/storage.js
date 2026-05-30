@@ -1,42 +1,66 @@
 const STORAGE_KEY = "bpmlist-songs";
 
-/** @typedef {{ id: string, title: string, bpm: number | null }} Song */
+/** @typedef {{ id: string, type: 'song', title: string, bpm: number | null }} Song */
+/** @typedef {{ id: string, type: 'break', title: string }} Break */
+/** @typedef {Song | Break} ListItem */
 
-/** @returns {Song[]} */
+/** @returns {ListItem[]} */
 export function loadSongs() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isValidSong);
+    return parsed.filter(isValidItem);
   } catch {
     return [];
   }
 }
 
-/** @param {Song[]} songs */
-export function saveSongs(songs) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
+/** @param {ListItem[]} items */
+export function saveSongs(items) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
 /** @returns {Song} */
 export function createSong(title = "", bpm = null) {
   return {
     id: crypto.randomUUID(),
+    type: "song",
     title: title.trim(),
     bpm: normalizeBpm(bpm),
   };
 }
 
-/** @param {unknown} song */
-function isValidSong(song) {
+/** @returns {Break} */
+export function createBreak(title = "") {
+  return {
+    id: crypto.randomUUID(),
+    type: "break",
+    title: title.trim(),
+  };
+}
+
+/** @param {ListItem} item */
+export function isSong(item) {
+  return item.type !== "break";
+}
+
+/** @param {unknown} item */
+function isValidItem(item) {
+  if (!item || typeof item !== "object" || typeof item.id !== "string") {
+    return false;
+  }
+
+  if (item.type === "break") {
+    return typeof item.title === "string";
+  }
+
   return (
-    song &&
-    typeof song === "object" &&
-    typeof song.id === "string" &&
-    typeof song.title === "string" &&
-    (song.bpm === null || (typeof song.bpm === "number" && song.bpm >= 20))
+    typeof item.title === "string" &&
+    (item.bpm === null ||
+      item.bpm === undefined ||
+      (typeof item.bpm === "number" && item.bpm >= 20))
   );
 }
 

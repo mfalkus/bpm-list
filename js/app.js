@@ -4,18 +4,22 @@ import {
   loadSongs,
   saveSongs,
   createSong,
+  createBreak,
+  isSong,
   normalizeBpm,
 } from "./storage.js";
 
 const songList = document.getElementById("song-list");
 const emptyState = document.getElementById("empty-state");
+const addBar = document.getElementById("add-bar");
 const addForm = document.getElementById("add-form");
 const newTitleInput = document.getElementById("new-title");
 const newBpmInput = document.getElementById("new-bpm");
 const rowTemplate = document.getElementById("song-row-template");
+const breakRowTemplate = document.getElementById("break-row-template");
 const themeToggle = document.getElementById("theme-toggle");
 
-/** @type {import('./storage.js').Song[]} */
+/** @type {import('./storage.js').ListItem[]} */
 let songs = loadSongs();
 
 /** @type {string | null} */
@@ -52,6 +56,10 @@ function persist() {
   saveSongs(songs);
 }
 
+function getSongNumber(index) {
+  return songs.slice(0, index + 1).filter(isSong).length;
+}
+
 function getTapTempo(songId) {
   if (!tapTempos.has(songId)) {
     tapTempos.set(songId, new TapTempo());
@@ -64,20 +72,56 @@ function setActiveSong(songId) {
   updateActiveRows();
 }
 
-function selectAdjacentSong(delta) {
-  if (songs.length === 0) return;
+function setActiveAddForm() {
+  activeSongId = null;
+  updateActiveRows();
+  newTitleInput.focus();
+}
 
-  const currentIndex = songs.findIndex((s) => s.id === activeSongId);
-  const startIndex = currentIndex >= 0 ? currentIndex : 0;
-  const nextIndex = Math.max(0, Math.min(songs.length - 1, startIndex + delta));
-
-  setActiveSong(songs[nextIndex].id);
-
+function scrollActiveRowIntoView() {
   const row = songList.querySelector(`.song-row[data-id="${activeSongId}"]`);
   row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
+function selectAdjacentSong(delta) {
+  if (delta < 0) {
+    if (songs.length === 0) {
+      setActiveAddForm();
+      return;
+    }
+
+    const currentIndex = activeSongId
+      ? songs.findIndex((s) => s.id === activeSongId)
+      : -1;
+
+    if (currentIndex <= 0) {
+      setActiveAddForm();
+      return;
+    }
+
+    setActiveSong(songs[currentIndex - 1].id);
+    scrollActiveRowIntoView();
+    return;
+  }
+
+  if (songs.length === 0) return;
+
+  if (!activeSongId) {
+    setActiveSong(songs[0].id);
+    scrollActiveRowIntoView();
+    return;
+  }
+
+  const currentIndex = songs.findIndex((s) => s.id === activeSongId);
+  if (currentIndex < 0 || currentIndex >= songs.length - 1) return;
+
+  setActiveSong(songs[currentIndex + 1].id);
+  scrollActiveRowIntoView();
+}
+
 function updateActiveRows() {
+  addBar.classList.toggle("is-active", activeSongId === null);
+
   for (const row of songList.querySelectorAll(".song-row")) {
     row.classList.toggle("is-active", row.dataset.id === activeSongId);
   }
@@ -89,11 +133,11 @@ function getActiveRowElements() {
   const row = songList.querySelector(`.song-row[data-id="${activeSongId}"]`);
   if (!row) return null;
 
-  const song = songs.find((s) => s.id === activeSongId);
-  if (!song) return null;
+  const item = songs.find((s) => s.id === activeSongId);
+  if (!item || !isSong(item)) return null;
 
   return {
-    song,
+    song: item,
     row,
     bpmInput: row.querySelector(".song-row__bpm"),
     tapBtn: row.querySelector(".song-row__tap"),
@@ -156,15 +200,17 @@ function render() {
   songList.replaceChildren();
   emptyState.hidden = songs.length > 0;
 
-  songs.forEach((song, index) => {
-    songList.appendChild(createRow(song, index));
+  songs.forEach((item, index) => {
+    songList.appendChild(
+      isSong(item) ? createSongRow(item, index) : createBreakRow(item, index)
+    );
   });
 
   updateActiveRows();
   updatePlayButtons(activePlayId);
 }
 
-function moveSong(index, delta) {
+function moveItem(index, delta) {
   const target = index + delta;
   if (target < 0 || target >= songs.length) return;
 
@@ -176,18 +222,54 @@ function moveSong(index, delta) {
   render();
 }
 
-function createRow(song, index) {
-  const fragment = rowTemplate.content.cloneNode(true);
-  const row = fragment.querySelector(".song-row");
-  const titleInput = fragment.querySelector(".song-row__title");
-  const bpmInput = fragment.querySelector(".song-row__bpm");
-  const tapBtn = fragment.querySelector(".song-row__tap");
-  const playBtn = fragment.querySelector(".song-row__play");
+function deleteItem(itemId) {
+  if (activePlayId === itemId) {
+    metronome.stop();
+    activePlayId = null;
+  }
+
+  tapTempos.delete(itemId);
+  const deleteIndex = songs.findIndex((s) => s.id === itemId);
+  songs = songs.filter((s) => s.id !== itemId);
+
+  if (activeSongId === itemId) {
+    activeSongId =
+      songs.length > 0
+        ? songs[Math.min(deleteIndex, songs.length - 1)].id
+        : null;
+  }
+
+  persist();
+  render();
+}
+
+function attachManageButtons(fragment, item, index) {
   const upBtn = fragment.querySelector(".song-row__up");
   const downBtn = fragment.querySelector(".song-row__down");
   const deleteBtn = fragment.querySelector(".song-row__delete");
 
+  upBtn.disabled = index === 0;
+  downBtn.disabled = index === songs.length - 1;
+
+  upBtn.addEventListener("click", () => moveItem(index, -1));
+  downBtn.addEventListener("click", () => moveItem(index, 1));
+  deleteBtn.addEventListener("click", () => {
+    setActiveSong(item.id);
+    deleteItem(item.id);
+  });
+}
+
+function createSongRow(song, index) {
+  const fragment = rowTemplate.content.cloneNode(true);
+  const row = fragment.querySelector(".song-row");
+  const numEl = fragment.querySelector(".song-row__num");
+  const titleInput = fragment.querySelector(".song-row__title");
+  const bpmInput = fragment.querySelector(".song-row__bpm");
+  const tapBtn = fragment.querySelector(".song-row__tap");
+  const playBtn = fragment.querySelector(".song-row__play");
+
   row.dataset.id = song.id;
+  numEl.textContent = String(getSongNumber(index));
   titleInput.value = song.title;
   if (song.bpm != null) bpmInput.value = String(song.bpm);
 
@@ -213,37 +295,29 @@ function createRow(song, index) {
   });
 
   tapBtn.addEventListener("click", () => handleTap(song, bpmInput, tapBtn));
-
   playBtn.addEventListener("click", () => togglePlay(song, bpmInput));
+  attachManageButtons(fragment, song, index);
 
-  upBtn.disabled = index === 0;
-  downBtn.disabled = index === songs.length - 1;
+  return fragment;
+}
 
-  upBtn.addEventListener("click", () => moveSong(index, -1));
-  downBtn.addEventListener("click", () => moveSong(index, 1));
+function createBreakRow(breakItem, index) {
+  const fragment = breakRowTemplate.content.cloneNode(true);
+  const row = fragment.querySelector(".song-row");
+  const titleInput = fragment.querySelector(".song-row__title");
 
-  deleteBtn.addEventListener("click", () => {
-    setActiveSong(song.id);
+  row.dataset.id = breakItem.id;
+  titleInput.value = breakItem.title;
 
-    if (activePlayId === song.id) {
-      metronome.stop();
-      activePlayId = null;
-    }
+  row.addEventListener("click", () => setActiveSong(breakItem.id));
 
-    tapTempos.delete(song.id);
-    const deleteIndex = songs.findIndex((s) => s.id === song.id);
-    songs = songs.filter((s) => s.id !== song.id);
-
-    if (activeSongId === song.id) {
-      activeSongId =
-        songs.length > 0
-          ? songs[Math.min(deleteIndex, songs.length - 1)].id
-          : null;
-    }
-
+  titleInput.addEventListener("focus", () => setActiveSong(breakItem.id));
+  titleInput.addEventListener("input", () => {
+    breakItem.title = titleInput.value;
     persist();
-    render();
   });
+
+  attachManageButtons(fragment, breakItem, index);
 
   return fragment;
 }
@@ -257,20 +331,46 @@ function updatePlayButtons(playingId) {
   }
 }
 
+addBar.addEventListener("focusin", () => {
+  activeSongId = null;
+  updateActiveRows();
+});
+
 addForm.addEventListener("submit", (e) => {
   e.preventDefault();
+
+  const action = e.submitter?.value;
   const title = newTitleInput.value.trim();
-  if (!title) return;
 
-  const song = createSong(title, newBpmInput.value);
-  songs.push(song);
-  activeSongId = song.id;
-  persist();
-  render();
+  if (action === "song") {
+    if (!title) {
+      newTitleInput.focus();
+      return;
+    }
 
-  newTitleInput.value = "";
-  newBpmInput.value = "";
-  newTitleInput.focus();
+    const song = createSong(title, newBpmInput.value);
+    songs.push(song);
+    activeSongId = song.id;
+    persist();
+    render();
+
+    newTitleInput.value = "";
+    newBpmInput.value = "";
+    newTitleInput.focus();
+    return;
+  }
+
+  if (action === "break") {
+    const breakItem = createBreak(title);
+    songs.push(breakItem);
+    activeSongId = breakItem.id;
+    persist();
+    render();
+
+    newTitleInput.value = "";
+    newBpmInput.value = "";
+    newTitleInput.focus();
+  }
 });
 
 document.addEventListener("keydown", (e) => {

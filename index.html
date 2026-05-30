@@ -27,26 +27,32 @@
       </header>
 
       <main>
-        <form id="add-form" class="add-form" autocomplete="off">
-          <input
-            type="text"
-            id="new-title"
-            class="input"
-            placeholder="Song title"
-            required
-            maxlength="120"
-          />
-          <input
-            type="number"
-            id="new-bpm"
-            class="input input--bpm"
-            placeholder="BPM"
-            min="20"
-            max="400"
-            step="1"
-          />
-          <button type="submit" class="btn btn--primary">Add song</button>
-        </form>
+        <div id="add-bar" class="add-bar">
+          <form id="add-form" class="add-form" autocomplete="off">
+            <input
+              type="text"
+              id="new-title"
+              class="input"
+              placeholder="Song title or break label"
+              maxlength="120"
+            />
+            <input
+              type="number"
+              id="new-bpm"
+              class="input input--bpm"
+              placeholder="BPM"
+              min="20"
+              max="400"
+              step="1"
+            />
+            <button type="submit" value="song" class="btn btn--primary">
+              + Song
+            </button>
+            <button type="submit" value="break" class="btn btn--ghost">
+              + Break
+            </button>
+          </form>
+        </div>
 
         <div id="empty-state" class="empty-state" hidden>
           <p>No songs yet. Add your first tune above.</p>
@@ -65,6 +71,7 @@
 
     <template id="song-row-template">
       <li class="song-row" data-id="">
+        <span class="song-row__num" aria-hidden="true"></span>
         <input
           type="text"
           class="input song-row__title"
@@ -122,6 +129,47 @@
               class="btn btn--ghost btn--icon btn--danger song-row__delete"
               aria-label="Remove song"
               title="Remove song"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      </li>
+    </template>
+
+    <template id="break-row-template">
+      <li class="song-row song-row--break" data-id="">
+        <span class="song-row__num" aria-hidden="true">—</span>
+        <input
+          type="text"
+          class="input song-row__title song-row__title--center"
+          placeholder="Break"
+          maxlength="120"
+          aria-label="Break label"
+        />
+        <div class="song-row__actions song-row__actions--break">
+          <div class="song-row__manage">
+            <button
+              type="button"
+              class="btn btn--ghost btn--icon song-row__up"
+              aria-label="Move break up"
+              title="Move up"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              class="btn btn--ghost btn--icon song-row__down"
+              aria-label="Move break down"
+              title="Move down"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              class="btn btn--ghost btn--icon btn--danger song-row__delete"
+              aria-label="Remove break"
+              title="Remove break"
             >
               ✕
             </button>

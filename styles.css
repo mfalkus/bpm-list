@@ -155,11 +155,23 @@ body {
   display: none;
 }
 
+.add-bar {
+  margin-bottom: 1.5rem;
+  padding: 0.625rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.add-bar.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
 .add-form {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
 }
 
 .input {
@@ -294,7 +306,7 @@ body {
 
 .song-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto;
   gap: 0.5rem;
   align-items: center;
   padding: 0.625rem;
@@ -309,6 +321,69 @@ body {
 .song-row.is-active {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.song-row__num {
+  min-width: 1.5rem;
+  padding-right: 0.125rem;
+  text-align: right;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.song-row.is-active .song-row__num {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.song-row--break {
+  grid-template-columns: auto 1fr auto;
+  background: color-mix(in srgb, var(--bg) 70%, var(--surface));
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.song-row--break.is-active {
+  border-style: dashed;
+}
+
+.song-row--break .song-row__num {
+  opacity: 0.45;
+  font-weight: 400;
+}
+
+.song-row--break.is-active .song-row__num {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.song-row__title--center {
+  text-align: center;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.song-row__title--center:not(:placeholder-shown) {
+  color: var(--text);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.song-row--break .song-row__title {
+  border-color: transparent;
+  background: transparent;
+}
+
+.song-row--break .song-row__title:focus {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.song-row__actions--break .song-row__manage {
+  padding-left: 0;
+  border-left: none;
 }
 
 .song-row__bpm-group {
@@ -379,14 +454,16 @@ body {
 
 @media (max-width: 540px) {
   .song-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto 1fr;
   }
 
   .song-row__bpm-group {
+    grid-column: 1 / -1;
     justify-content: flex-start;
   }
 
   .song-row__actions {
+    grid-column: 1 / -1;
     justify-content: flex-end;
   }
 
