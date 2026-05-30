@@ -24,6 +24,7 @@ const newBpmInput = document.getElementById("new-bpm");
 const rowTemplate = document.getElementById("song-row-template");
 const breakRowTemplate = document.getElementById("break-row-template");
 const themeToggle = document.getElementById("theme-toggle");
+const volumeSlider = document.getElementById("volume-slider");
 const gigNameDisplay = document.getElementById("gig-name-display");
 const gigNameInput = document.getElementById("gig-name-input");
 const editGigNameBtn = document.getElementById("edit-gig-name");
@@ -52,9 +53,31 @@ const tapTempos = new Map();
 /** @type {ReturnType<typeof setTimeout> | null} */
 let urlSyncTimer = null;
 
-const metronome = new Metronome((playing) => {
-  updatePlayButtons(playing ? activePlayId : null);
-});
+const metronome = new Metronome(
+  (playing) => {
+    updatePlayButtons(playing ? activePlayId : null);
+    if (!playing) clearBeatFlash();
+  },
+  (_beatIndex, accent) => flashActiveRow(accent)
+);
+
+function flashActiveRow(accent = false) {
+  if (!activePlayId || !metronome.isPlaying) return;
+
+  const row = songList.querySelector(`.song-row[data-id="${activePlayId}"]`);
+  if (!row) return;
+
+  row.classList.remove("is-beating", "is-beating--accent");
+  void row.offsetWidth;
+  row.classList.add("is-beating");
+  if (accent) row.classList.add("is-beating--accent");
+}
+
+function clearBeatFlash() {
+  for (const row of songList.querySelectorAll(".song-row.is-beating")) {
+    row.classList.remove("is-beating", "is-beating--accent");
+  }
+}
 
 function getAppState() {
   return { name: gigName, description: gigDescription, items: songs };
@@ -138,6 +161,23 @@ function renderGigDescription(description) {
   gigDescription = saveGigDescription(description);
   gigDescDisplay.textContent = gigDescription;
   scheduleUrlSync();
+}
+
+function initVolume() {
+  const stored = localStorage.getItem("bpmlist-volume");
+  const percent = stored != null ? Number(stored) : 80;
+  const clamped = Number.isFinite(percent)
+    ? Math.max(0, Math.min(100, percent))
+    : 80;
+
+  volumeSlider.value = String(clamped);
+  metronome.setVolume(clamped / 100);
+
+  volumeSlider.addEventListener("input", () => {
+    const value = Number(volumeSlider.value);
+    metronome.setVolume(value / 100);
+    localStorage.setItem("bpmlist-volume", String(value));
+  });
 }
 
 function initTheme() {
@@ -533,6 +573,7 @@ copyLinkBtn.addEventListener("click", async () => {
 });
 
 initTheme();
+initVolume();
 initGigName();
 syncToStorage();
 render();

@@ -4,15 +4,19 @@
  */
 export class Metronome {
   #ctx = null;
+  #masterGain = null;
+  #volume = 0.8;
   #isPlaying = false;
   #bpm = 120;
   #nextBeatTime = 0;
   #beatCount = 0;
   #timerId = null;
   #onStateChange = null;
+  #onBeat = null;
 
-  constructor(onStateChange) {
+  constructor(onStateChange, onBeat) {
     this.#onStateChange = onStateChange;
+    this.#onBeat = onBeat;
   }
 
   get isPlaying() {
@@ -23,9 +27,23 @@ export class Metronome {
     return this.#bpm;
   }
 
+  get volume() {
+    return this.#volume;
+  }
+
+  setVolume(level) {
+    this.#volume = Math.max(0, Math.min(1, level));
+    if (this.#masterGain) {
+      this.#masterGain.gain.value = this.#volume;
+    }
+  }
+
   async #ensureContext() {
     if (!this.#ctx) {
       this.#ctx = new AudioContext();
+      this.#masterGain = this.#ctx.createGain();
+      this.#masterGain.gain.value = this.#volume;
+      this.#masterGain.connect(this.#ctx.destination);
     }
     if (this.#ctx.state === "suspended") {
       await this.#ctx.resume();
@@ -33,7 +51,7 @@ export class Metronome {
     return this.#ctx;
   }
 
-  #playClick(time, accent = false) {
+  #playClick(time, accent, beatIndex) {
     const ctx = this.#ctx;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -44,10 +62,17 @@ export class Metronome {
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this.#masterGain);
 
     osc.start(time);
     osc.stop(time + 0.05);
+
+    const delayMs = Math.max(0, (time - ctx.currentTime) * 1000);
+    setTimeout(() => {
+      if (this.#isPlaying) {
+        this.#onBeat?.(beatIndex, accent);
+      }
+    }, delayMs);
   }
 
   #schedule() {
@@ -58,7 +83,7 @@ export class Metronome {
 
     while (this.#nextBeatTime < this.#ctx.currentTime + scheduleAhead) {
       const accent = this.#beatCount % 4 === 0;
-      this.#playClick(this.#nextBeatTime, accent);
+      this.#playClick(this.#nextBeatTime, accent, this.#beatCount);
       this.#nextBeatTime += interval;
       this.#beatCount++;
     }
@@ -81,7 +106,7 @@ export class Metronome {
 
     // First click fires immediately — no scheduling delay.
     const now = this.#ctx.currentTime;
-    this.#playClick(now, true);
+    this.#playClick(now, true, 0);
     this.#beatCount = 1;
     this.#nextBeatTime = now + 60 / this.#bpm;
 

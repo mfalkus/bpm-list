@@ -66,16 +66,30 @@
             </button>
           </div>
         </div>
-        <button
-          type="button"
-          id="theme-toggle"
-          class="icon-btn"
-          aria-label="Toggle light/dark mode"
-          title="Toggle theme"
-        >
-          <span class="theme-icon theme-icon--light" aria-hidden="true">☀</span>
-          <span class="theme-icon theme-icon--dark" aria-hidden="true">☾</span>
-        </button>
+        <div class="header__controls">
+          <label class="volume-control" title="Metronome volume">
+            <span class="volume-icon" aria-hidden="true"></span>
+            <input
+              type="range"
+              id="volume-slider"
+              class="volume-slider"
+              min="0"
+              max="100"
+              value="80"
+              aria-label="Metronome volume"
+            />
+          </label>
+          <button
+            type="button"
+            id="theme-toggle"
+            class="icon-btn"
+            aria-label="Toggle light/dark mode"
+            title="Toggle theme"
+          >
+            <span class="theme-icon theme-icon--light" aria-hidden="true">☀</span>
+            <span class="theme-icon theme-icon--dark" aria-hidden="true">☾</span>
+          </button>
+        </div>
       </header>
 
       <main>
