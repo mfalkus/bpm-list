@@ -13,6 +13,7 @@ import {
   loadGigDescription,
   saveGigDescription,
 } from "./storage.js";
+import { loadSharedState, updateShareUrl } from "./share.js";
 
 const songList = document.getElementById("song-list");
 const emptyState = document.getElementById("empty-state");
@@ -29,9 +30,15 @@ const editGigNameBtn = document.getElementById("edit-gig-name");
 const gigDescDisplay = document.getElementById("gig-desc-display");
 const gigDescInput = document.getElementById("gig-desc-input");
 const editGigDescBtn = document.getElementById("edit-gig-desc");
+const copyLinkBtn = document.getElementById("copy-link-btn");
+
+const sharedState = loadSharedState();
 
 /** @type {import('./storage.js').ListItem[]} */
-let songs = loadSongs();
+let songs = sharedState?.items ?? loadSongs();
+
+let gigName = sharedState?.name ?? loadGigName();
+let gigDescription = sharedState?.description ?? loadGigDescription();
 
 /** @type {string | null} */
 let activeSongId = songs.length > 0 ? songs[songs.length - 1].id : null;
@@ -42,17 +49,38 @@ let activePlayId = null;
 /** @type {Map<string, TapTempo>} */
 const tapTempos = new Map();
 
+/** @type {ReturnType<typeof setTimeout> | null} */
+let urlSyncTimer = null;
+
 const metronome = new Metronome((playing) => {
   updatePlayButtons(playing ? activePlayId : null);
 });
+
+function getAppState() {
+  return { name: gigName, description: gigDescription, items: songs };
+}
+
+function scheduleUrlSync() {
+  clearTimeout(urlSyncTimer);
+  urlSyncTimer = setTimeout(() => updateShareUrl(getAppState()), 400);
+}
+
+function syncToStorage() {
+  saveSongs(songs);
+  saveGigName(gigName);
+  saveGigDescription(gigDescription);
+  scheduleUrlSync();
+}
 
 function updateDocumentTitle(name) {
   document.title = name === DEFAULT_GIG_NAME ? "BPM List" : `${name} · BPM List`;
 }
 
 function renderGigName(name) {
-  gigNameDisplay.textContent = name;
-  updateDocumentTitle(name);
+  gigName = saveGigName(name);
+  gigNameDisplay.textContent = gigName;
+  updateDocumentTitle(gigName);
+  scheduleUrlSync();
 }
 
 function initInlineEdit({ display, input, editBtn, onSave }) {
@@ -87,26 +115,29 @@ function initInlineEdit({ display, input, editBtn, onSave }) {
 }
 
 function initGigName() {
-  renderGigName(loadGigName());
-  renderGigDescription(loadGigDescription());
+  gigNameDisplay.textContent = gigName;
+  updateDocumentTitle(gigName);
+  gigDescDisplay.textContent = gigDescription;
 
   initInlineEdit({
     display: gigNameDisplay,
     input: gigNameInput,
     editBtn: editGigNameBtn,
-    onSave: (value) => renderGigName(saveGigName(value)),
+    onSave: (value) => renderGigName(value),
   });
 
   initInlineEdit({
     display: gigDescDisplay,
     input: gigDescInput,
     editBtn: editGigDescBtn,
-    onSave: (value) => renderGigDescription(saveGigDescription(value)),
+    onSave: (value) => renderGigDescription(value),
   });
 }
 
 function renderGigDescription(description) {
-  gigDescDisplay.textContent = description;
+  gigDescription = saveGigDescription(description);
+  gigDescDisplay.textContent = gigDescription;
+  scheduleUrlSync();
 }
 
 function initTheme() {
@@ -127,7 +158,7 @@ function toggleTheme() {
 }
 
 function persist() {
-  saveSongs(songs);
+  syncToStorage();
 }
 
 function getSongNumber(index) {
@@ -478,6 +509,25 @@ document.addEventListener("keydown", (e) => {
 
 themeToggle.addEventListener("click", toggleTheme);
 
+copyLinkBtn.addEventListener("click", async () => {
+  updateShareUrl(getAppState());
+  const url = window.location.href;
+
+  try {
+    await navigator.clipboard.writeText(url);
+    copyLinkBtn.textContent = "Link copied!";
+    window.setTimeout(() => {
+      copyLinkBtn.textContent = "Copy share link";
+    }, 2000);
+  } catch {
+    copyLinkBtn.textContent = "Copy failed";
+    window.setTimeout(() => {
+      copyLinkBtn.textContent = "Copy share link";
+    }, 2000);
+  }
+});
+
 initTheme();
 initGigName();
+syncToStorage();
 render();
