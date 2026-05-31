@@ -748,8 +748,22 @@ body {
   color: var(--text-muted);
 }
 
-.footer__copy-link {
+.footer__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.5rem;
   margin-top: 0.625rem;
+}
+
+.footer__actions-sep {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  user-select: none;
+}
+
+.footer__action {
   padding: 0;
   border: none;
   background: none;
@@ -762,8 +776,13 @@ body {
   transition: color var(--transition);
 }
 
-.footer__copy-link:hover {
+.footer__action:hover {
   color: var(--text);
+}
+
+.app.is-gig-time #clear-list-btn,
+.app.is-gig-time .footer__actions-sep {
+  display: none;
 }
 
 .footer kbd {

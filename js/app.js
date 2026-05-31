@@ -34,6 +34,7 @@ const gigDescDisplay = document.getElementById("gig-desc-display");
 const gigDescInput = document.getElementById("gig-desc-input");
 const editGigDescBtn = document.getElementById("edit-gig-desc");
 const copyLinkBtn = document.getElementById("copy-link-btn");
+const clearListBtn = document.getElementById("clear-list-btn");
 
 const sharedState = loadSharedState();
 
@@ -314,6 +315,20 @@ function toggleTheme() {
   const next = isDark ? "light" : "dark";
   document.documentElement.dataset.theme = next;
   localStorage.setItem("bpmlist-theme", next);
+}
+
+function clearList() {
+  if (songs.length === 0) return;
+  if (!confirm("Clear the entire setlist?")) return;
+
+  metronome.stop();
+  activePlayId = null;
+  tapTempos.clear();
+  songs = [];
+  activeSongId = null;
+  persist();
+  render();
+  setActiveAddForm();
 }
 
 function persist() {
@@ -740,6 +755,8 @@ document.addEventListener("keydown", (e) => {
 });
 
 themeToggle.addEventListener("click", toggleTheme);
+
+clearListBtn.addEventListener("click", clearList);
 
 copyLinkBtn.addEventListener("click", async () => {
   updateShareUrl(getAppState());
