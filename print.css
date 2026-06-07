@@ -1,0 +1,169 @@
+@media print {
+  :root,
+  [data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    --bg: #fff;
+    --surface: #fff;
+    --surface-hover: #fff;
+    --border: transparent;
+    --text: #000;
+    --text-muted: #444;
+    --accent: #000;
+    --shadow: none;
+  }
+
+  html {
+    font-size: 112.5%;
+    background: #fff;
+    color: #000;
+  }
+
+  body {
+    min-height: auto;
+    line-height: 1.45;
+  }
+
+  .app {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* Hide interactive chrome */
+  .header__controls,
+  #add-bar,
+  .footer,
+  .edit-btn,
+  .empty-state,
+  .song-row__actions,
+  .header__gig-name-input,
+  .header__tagline-input,
+  .song-row__title,
+  .song-row__bpm,
+  .song-row__tap {
+    display: none !important;
+  }
+
+  /* Show read-only text */
+  .header__gig-name,
+  .header__tagline {
+    display: block !important;
+  }
+
+  .song-row__title-text,
+  .song-row__bpm-text {
+    display: block !important;
+  }
+
+  .song-row.is-done {
+    display: grid !important;
+  }
+
+  .header {
+    margin-bottom: 1.25rem;
+    display: block;
+  }
+
+  .header__title-row {
+    gap: 0.625rem;
+  }
+
+  .site-logo {
+    width: 2rem;
+    height: 2rem;
+    color: #000;
+  }
+
+  .header h1,
+  .header__gig-name {
+    font-size: 2rem;
+  }
+
+  .header__tagline {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+  }
+
+  .song-list {
+    gap: 0.625rem;
+  }
+
+  .song-row,
+  .song-row--break {
+    grid-template-columns: 2.5rem 1fr auto;
+    grid-template-areas: none;
+    align-items: baseline;
+    padding: 0.375rem 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #ddd;
+    border-radius: 0;
+    box-shadow: none;
+    break-inside: avoid;
+    cursor: default;
+  }
+
+  .song-row--break {
+    grid-template-columns: 2.5rem 1fr;
+  }
+
+  .song-row.is-active {
+    border: none;
+    border-bottom: 1px solid #ddd;
+    box-shadow: none;
+  }
+
+  .song-row__num {
+    font-size: 1rem;
+    color: var(--text-muted);
+  }
+
+  .song-row.is-active .song-row__num {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .song-row__title-text {
+    font-size: 1.125rem;
+    font-weight: 500;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+  }
+
+  .song-row__title-text--center {
+    text-align: left;
+    font-style: italic;
+    color: var(--text-muted);
+  }
+
+  .song-row__title-text--center:not(:empty) {
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  .song-row__bpm-group {
+    justify-content: flex-end;
+  }
+
+  .song-row__bpm-text {
+    flex: none;
+    width: auto;
+    min-width: 3.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .btn,
+  .icon-btn,
+  .input,
+  .footer kbd {
+    border: none !important;
+    box-shadow: none !important;
+    background: none !important;
+  }
+
+  * {
+    animation: none !important;
+  }
+}
